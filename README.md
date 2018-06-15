@@ -64,10 +64,18 @@ alias gcloud="docker run --rm -ti \
     -e CLOUDSDK_CORE_PROJECT \
     -e CLOUDSDK_COMPUTE_ZONE \
     -e CLOUDSDK_COMPUTE_REGION \
+    -v "$PWD":/non-privileged \
     gcloud-kubectl-sdk-docker:alpine gcloud"
 ```
 
 See the IAQ for the `-e` flags.
+
+NB: the `gcloud` alias mounts your current folder into the container,
+in order to access your current workdirectory for e.g.
+`gcloud compute scp file.txt instance-name:/some/path`.
+So if you try to do something with a parent directory,
+like `gcloud compute scp ../file.txt instance-name:/some/path`,
+you're going to have a bad time.
 
 ## Kubectl
 
@@ -82,12 +90,24 @@ alias gcloud-get-credentials="docker run --rm -ti \
     gcloud container clusters get-credentials"
 ```
 
+Usage `$ gcloud-get-credentials <name of cluster>`
+
 ```
-alias kubectl="docker run --rm -ti \
+alias kubectl="docker run --rm -ti  \
     --volumes-from gcloud-container \
+    -v "$PWD":/non-privileged \
     gcloud-kubectl-sdk-docker:alpine \
     kubectl"
 ```
+
+Usage `$ kubectl get nodes`
+
+NB: the `kubectl`-alias mounts the current folder into the container,
+in order to access your current workdirectory,
+(for `kubectl apply -f pod.yaml` etc.)
+so if you try something with a parent directory,
+like `kubectl apply -f ../../pod.yaml`,
+you're going to have a bad time.
 
 # Infrequently Asked Questions (IAQ)
 

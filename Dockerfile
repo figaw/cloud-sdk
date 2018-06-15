@@ -31,4 +31,7 @@ USER non-privileged
 # Create the .config folder, as the user, otherwise it's mounted as root. Thanks Docker.
 RUN mkdir /non-privileged/.config
 
+# Set the workdir to the home-folder of the non-privileged user
+WORKDIR /non-privileged
+
 VOLUME ["/non-privileged/.config"]
