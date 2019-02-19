@@ -1,9 +1,10 @@
 # gcloud sdk and kubectl in docker, alpine linux, as a non-privileged user
+
 See: https://hub.docker.com/r/google/cloud-sdk/
 
 # Build
 
-`docker build -t gcloud-kubectl-sdk-docker:alpine .`
+`docker build -t figaw/gcloud-sdk:234.0.0 .`
 
 # Running
 
@@ -11,35 +12,39 @@ Login with:
 ```
 docker run -ti \
     --name gcloud-container \
-    gcloud-kubectl-sdk-docker:alpine \
+    figaw/gcloud-sdk:234.0.0 \
     gcloud auth login
 ```
 
 NB: When you use it like above, _any_ container getting the `gcloud-container` volume, will have access to your credentials!
 
 ## Testing (without the environment)
+
 ```
 docker run -ti \
     --name gcloud-container \
-    gcloud-kubectl-sdk-docker:alpine \
+    figaw/gcloud-sdk:234.0.0 \
     gcloud init
 ```
+
 and
+
 ```
 docker run --rm -ti \
     --volumes-from gcloud-container \
-    gcloud-kubectl-sdk-docker:alpine \
+    figaw/gcloud-sdk:234.0.0 \
     gcloud --version
 ```
 
 ## Testing (with the environment)
+
 ```
 docker run --rm -ti \
     --volumes-from gcloud-container \
     -e CLOUDSDK_CORE_PROJECT \
     -e CLOUDSDK_COMPUTE_ZONE \
     -e CLOUDSDK_COMPUTE_REGION \
-    gcloud-kubectl-sdk-docker:alpine \
+    figaw/gcloud-sdk:234.0.0 \
     gcloud --version
 ```
 
@@ -54,7 +59,7 @@ docker rm gcloud-container
 ```
 alias gcloud-login="docker run -ti \
     --name gcloud-container \
-    gcloud-kubectl-sdk-docker:alpine \
+    figaw/gcloud-sdk:234.0.0 \
     gcloud auth login"
 ```
 
@@ -65,7 +70,7 @@ alias gcloud="docker run --rm -ti \
     -e CLOUDSDK_COMPUTE_ZONE \
     -e CLOUDSDK_COMPUTE_REGION \
     -v "$PWD":/non-privileged \
-    gcloud-kubectl-sdk-docker:alpine gcloud"
+    figaw/gcloud-sdk:234.0.0 gcloud"
 ```
 
 See the IAQ for the `-e` flags.
@@ -86,7 +91,7 @@ alias gcloud-get-credentials="docker run --rm -ti \
     -e CLOUDSDK_COMPUTE_ZONE \
     -e CLOUDSDK_COMPUTE_REGION \
     -v $HOME/.kube:/root/.kube \
-    gcloud-kubectl-sdk-docker:alpine \
+    figaw/gcloud-sdk:234.0.0 \
     gcloud container clusters get-credentials"
 ```
 
@@ -96,7 +101,7 @@ Usage `$ gcloud-get-credentials <name of cluster>`
 alias kubectl="docker run --rm -ti  \
     --volumes-from gcloud-container \
     -v "$PWD":/non-privileged \
-    gcloud-kubectl-sdk-docker:alpine \
+    figaw/gcloud-sdk:234.0.0 \
     kubectl"
 ```
 
@@ -109,9 +114,9 @@ so if you try something with a parent directory,
 like `kubectl apply -f ../../pod.yaml`,
 you're going to have a bad time.
 
-# Infrequently Asked Questions (IAQ)
+## Infrequently Asked Questions (IAQ)
 
-## -e flags, environment variables
+### -e flags, environment variables
 When you use environment flag like `-e KEY`, rather than `-e "KEY=VALUE"`,
 the environment variable `KEY` is passed if it's set.
 
@@ -124,19 +129,19 @@ export CLOUDSDK_CORE_PROJECT="project key"
 ```
 Get `project key` with `gcloud projects list`
 
-### Project as a gcloud-flag
+#### Project as a gcloud-flag
 `gcloud compute instances list --project your_project`
 
-### Project as a gcloud config
+#### Project as a gcloud config
 `gcloud config set project your_project`
 
-### Order of evaluation
+#### Order of evaluation
 `--project` takes priority over `CLOUDSDK_CORE_PROJECT` and finally it reads from the `config core/project`.
 
 I personally prefer the env-var solution as the alias' will work out of the box, and I'll be mostly working on one project for a long time.
 Also I can use `--project` if I need to do something in another project, or simply re-export the env-var for my current session.
 
-### Region, Zone
+#### Region, Zone
 See: https://cloud.google.com/compute/docs/gcloud-compute/
 
 It doesn't outright _suggest_ you set these in the environment, but I'll use the same argument as above;
@@ -146,7 +151,7 @@ export CLOUDSDK_COMPUTE_ZONE=europe-west1-b
 export CLOUDSDK_COMPUTE_REGION=europe-west1
 ```
 
-## Why reinvent the wheel?
+### Why reinvent the wheel?
 
 Well, extending the `google/cloud-sdk:alpine` with `kubectl` doesn't work,
 unless you either run it with the `KUBECONFIG` environment variable, or (of course..)
