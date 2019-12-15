@@ -1,5 +1,5 @@
-FROM alpine:3.7
-ENV CLOUD_SDK_VERSION 234.0.0
+FROM alpine:3.10.3
+ENV CLOUD_SDK_VERSION 273.0.0
 
 # .config is the volume that persists
 ENV KUBECONFIG /non-privileged/.config/.kube
