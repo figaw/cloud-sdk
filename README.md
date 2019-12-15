@@ -4,7 +4,7 @@ See: https://hub.docker.com/r/google/cloud-sdk/
 
 # Build
 
-`docker build -t figaw/gcloud-sdk:234.0.0 .`
+`./build.sh`
 
 # Running
 
