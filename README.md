@@ -1,15 +1,18 @@
 # gcloud sdk and kubectl in docker, alpine linux, as a non-privileged user
 
-See: https://hub.docker.com/r/google/cloud-sdk/
+See: [https://hub.docker.com/r/google/cloud-sdk/](https://hub.docker.com/r/google/cloud-sdk/)
 
-# Build
+## Build
 
-`./build.sh`
+```shell
+./build.sh
+```
 
-# Running
+## Running
 
 Login with:
-```
+
+```shell
 docker run -ti \
     --name gcloud-container \
     figaw/gcloud-sdk:234.0.0 \
@@ -18,9 +21,9 @@ docker run -ti \
 
 NB: When you use it like above, _any_ container getting the `gcloud-container` volume, will have access to your credentials!
 
-## Testing (without the environment)
+### Testing (without the environment)
 
-```
+```shell
 docker run -ti \
     --name gcloud-container \
     figaw/gcloud-sdk:234.0.0 \
@@ -29,16 +32,16 @@ docker run -ti \
 
 and
 
-```
+```shell
 docker run --rm -ti \
     --volumes-from gcloud-container \
     figaw/gcloud-sdk:234.0.0 \
     gcloud --version
 ```
 
-## Testing (with the environment)
+### Testing (with the environment)
 
-```
+```shell
 docker run --rm -ti \
     --volumes-from gcloud-container \
     -e CLOUDSDK_CORE_PROJECT \
@@ -48,22 +51,22 @@ docker run --rm -ti \
     gcloud --version
 ```
 
-# Cleanup
+## Cleanup
 
-```
+```shell
 docker rm gcloud-container
 ```
 
-# Helpful Aliases
+## Helpful Aliases
 
-```
+```shell
 alias gcloud-login="docker run -ti \
     --name gcloud-container \
     figaw/gcloud-sdk:234.0.0 \
     gcloud auth login"
 ```
 
-```
+```shell
 alias gcloud="docker run --rm -ti \
     --volumes-from gcloud-container \
     -e CLOUDSDK_CORE_PROJECT \
@@ -82,9 +85,9 @@ So if you try to do something with a parent directory,
 like `gcloud compute scp ../file.txt instance-name:/some/path`,
 you're going to have a bad time.
 
-## Kubectl
+### Kubectl
 
-```
+```shell
 alias gcloud-get-credentials="docker run --rm -ti \
     --volumes-from gcloud-container \
     -e CLOUDSDK_CORE_PROJECT \
@@ -97,7 +100,7 @@ alias gcloud-get-credentials="docker run --rm -ti \
 
 Usage `$ gcloud-get-credentials <name of cluster>`
 
-```
+```shell
 alias kubectl="docker run --rm -ti  \
     --volumes-from gcloud-container \
     -v "$PWD":/non-privileged \
@@ -117,6 +120,7 @@ you're going to have a bad time.
 ## Infrequently Asked Questions (IAQ)
 
 ### -e flags, environment variables
+
 When you use environment flag like `-e KEY`, rather than `-e "KEY=VALUE"`,
 the environment variable `KEY` is passed if it's set.
 
@@ -124,34 +128,40 @@ When `gcloud` is run without a configured project, it'll complain
 and tell you to either configure it or set the `CLOUDSDK_CORE_PROJECT` environment variable,
 which you can then do on your host, because we mount it into the container.
 
-```
+```shell
 export CLOUDSDK_CORE_PROJECT="project key"
 ```
+
 Get `project key` with `gcloud projects list`
 
 #### Project as a gcloud-flag
+
 `gcloud compute instances list --project your_project`
 
 #### Project as a gcloud config
+
 `gcloud config set project your_project`
 
 #### Order of evaluation
+
 `--project` takes priority over `CLOUDSDK_CORE_PROJECT` and finally it reads from the `config core/project`.
 
 I personally prefer the env-var solution as the alias' will work out of the box, and I'll be mostly working on one project for a long time.
 Also I can use `--project` if I need to do something in another project, or simply re-export the env-var for my current session.
 
 #### Region, Zone
-See: https://cloud.google.com/compute/docs/gcloud-compute/
+
+See: [https://cloud.google.com/compute/docs/gcloud-compute/](https://cloud.google.com/compute/docs/gcloud-compute/)
 
 It doesn't outright _suggest_ you set these in the environment, but I'll use the same argument as above;
 the alias' will work out of the box. No need for `gcloud init` or `gcloud config set ..`
-```
+
+```shell
 export CLOUDSDK_COMPUTE_ZONE=europe-west1-b
 export CLOUDSDK_COMPUTE_REGION=europe-west1
 ```
 
-### Why reinvent the wheel?
+### Why reinvent the wheel
 
 Well, extending the `google/cloud-sdk:alpine` with `kubectl` doesn't work,
 unless you either run it with the `KUBECONFIG` environment variable, or (of course..)
