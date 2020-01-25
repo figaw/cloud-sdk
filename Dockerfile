@@ -1,8 +1,5 @@
-FROM alpine:3.10.3
-ENV CLOUD_SDK_VERSION 273.0.0
-
-# .config is the volume that persists
-ENV KUBECONFIG /non-privileged/.config/.kube
+FROM alpine:3.11.3
+ENV CLOUD_SDK_VERSION 277.0.0
 
 ENV PATH /google-cloud-sdk/bin:$PATH
 RUN apk --no-cache add \
@@ -21,13 +18,13 @@ RUN apk --no-cache add \
     gcloud config set component_manager/disable_update_check true && \
     gcloud config set metrics/environment github_docker_image && \
     gcloud --version && \
-    gcloud components install kubectl && \
     adduser -D -u 1000 -h /non-privileged non-privileged
 
 # last line: add a user, with no password, uid 1000, home-folder /non-privileged, username non-privileged
 
-# Create the .config folder, as the user, otherwise it's mounted as root. Thanks Docker.
+# Create folders as the user, otherwise it's mounted as root. Thanks Docker.
 RUN mkdir /non-privileged/.config
+RUN mkdir /non-privileged/.kube
 RUN mkdir /non-privileged/.ssh
 
 RUN chown -R non-privileged:non-privileged /non-privileged

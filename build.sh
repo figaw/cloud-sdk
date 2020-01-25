@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker build -t gcloud-kubectl-sdk-docker:alpine-3.10.3-sdk-237.0.0 .
+docker build -t figaw/cloud-sdk:277.0.0-alpine .

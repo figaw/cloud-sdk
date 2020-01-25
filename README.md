@@ -1,4 +1,4 @@
-# gcloud sdk and kubectl in docker, alpine linux, as a non-privileged user
+# gcloud sdk in docker, alpine linux, as a non-privileged user
 
 See: [https://hub.docker.com/r/google/cloud-sdk/](https://hub.docker.com/r/google/cloud-sdk/)
 
@@ -15,41 +15,11 @@ Login with:
 ```shell
 docker run -ti \
     --name gcloud-container \
-    figaw/gcloud-sdk:234.0.0 \
+    figaw/cloud-sdk:277.0.0-alpine \
     gcloud auth login
 ```
 
 NB: When you use it like above, _any_ container getting the `gcloud-container` volume, will have access to your credentials!
-
-### Testing (without the environment)
-
-```shell
-docker run -ti \
-    --name gcloud-container \
-    figaw/gcloud-sdk:234.0.0 \
-    gcloud init
-```
-
-and
-
-```shell
-docker run --rm -ti \
-    --volumes-from gcloud-container \
-    figaw/gcloud-sdk:234.0.0 \
-    gcloud --version
-```
-
-### Testing (with the environment)
-
-```shell
-docker run --rm -ti \
-    --volumes-from gcloud-container \
-    -e CLOUDSDK_CORE_PROJECT \
-    -e CLOUDSDK_COMPUTE_ZONE \
-    -e CLOUDSDK_COMPUTE_REGION \
-    figaw/gcloud-sdk:234.0.0 \
-    gcloud --version
-```
 
 ## Cleanup
 
@@ -60,20 +30,21 @@ docker rm gcloud-container
 ## Helpful Aliases
 
 ```shell
-alias gcloud-login="docker run -ti \
-    --name gcloud-container \
-    figaw/gcloud-sdk:234.0.0 \
-    gcloud auth login"
-```
-
-```shell
-alias gcloud="docker run --rm -ti \
+alias gcloud='docker run --rm -ti \
     --volumes-from gcloud-container \
     -e CLOUDSDK_CORE_PROJECT \
     -e CLOUDSDK_COMPUTE_ZONE \
     -e CLOUDSDK_COMPUTE_REGION \
-    -v "$PWD":/non-privileged \
-    figaw/gcloud-sdk:234.0.0 gcloud"
+    -v "$PWD":/mnt/gcloud/ \
+    -w "/mnt/gcloud" \
+    figaw/cloud-sdk:277.0.0-alpine gcloud'
+```
+
+```shell
+alias gcloud-login="docker run -ti \
+    --name gcloud-container \
+    figaw/cloud-sdk:277.0.0-alpine \
+    gcloud auth login"
 ```
 
 See the IAQ for the `-e` flags.
@@ -85,37 +56,23 @@ So if you try to do something with a parent directory,
 like `gcloud compute scp ../file.txt instance-name:/some/path`,
 you're going to have a bad time.
 
-### Kubectl
+### Getting a Kubeconfig volume
+
+With the following commands you can create a volume called `kubeconfig`,
+with the authorization for a cluster on the Google Kubernetes Engine.
 
 ```shell
-alias gcloud-get-credentials="docker run --rm -ti \
+alias gcloud-get-credentials-volume="docker run --rm -ti \
     --volumes-from gcloud-container \
     -e CLOUDSDK_CORE_PROJECT \
     -e CLOUDSDK_COMPUTE_ZONE \
     -e CLOUDSDK_COMPUTE_REGION \
-    -v $HOME/.kube:/root/.kube \
-    figaw/gcloud-sdk:234.0.0 \
+    -v kubeconfig:/non-privileged/.kube \
+    figaw/cloud-sdk:277.0.0-alpine \
     gcloud container clusters get-credentials"
 ```
 
 Usage `$ gcloud-get-credentials <name of cluster>`
-
-```shell
-alias kubectl="docker run --rm -ti  \
-    --volumes-from gcloud-container \
-    -v "$PWD":/non-privileged \
-    figaw/gcloud-sdk:234.0.0 \
-    kubectl"
-```
-
-Usage `$ kubectl get nodes`
-
-NB: the `kubectl`-alias mounts the current folder into the container,
-in order to access your current workdirectory,
-(for `kubectl apply -f pod.yaml` etc.)
-so if you try something with a parent directory,
-like `kubectl apply -f ../../pod.yaml`,
-you're going to have a bad time.
 
 ## Infrequently Asked Questions (IAQ)
 
@@ -167,5 +124,6 @@ Well, extending the `google/cloud-sdk:alpine` with `kubectl` doesn't work,
 unless you either run it with the `KUBECONFIG` environment variable, or (of course..)
 add it when you run the image.
 
-Other than that I just wanted to limit the privileges as well, so it's not running as root;
+Other than that I just wanted to limit the privileges as well,
+so it's not running as root;
 because not running as root is awesome.
