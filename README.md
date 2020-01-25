@@ -74,6 +74,13 @@ alias gcloud-get-credentials-volume="docker run --rm -ti \
 
 Usage `$ gcloud-get-credentials <name of cluster>`
 
+> NB: the kubeconfig still requires you to use `kubectl`
+> from a place where `gcloud` is available.
+> I'm not installing the `kubectl`-component from the cloud-sdk
+> because I didn't like the dated version.
+> You should either install the `kubectl`-component or refer to
+> the <USING_KUBECTL.md> guide.
+
 ## Infrequently Asked Questions (IAQ)
 
 ### -e flags, environment variables
